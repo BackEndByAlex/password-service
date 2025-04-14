@@ -1,0 +1,30 @@
+{
+  "name": "password-service",
+  "version": "1.0.0",
+  "description": "To make it easy for you to get started with GitLab, here's a list of recommended next steps.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node ./src/server.js",
+    "dev": "nodemon ./src/server.js",
+    "lint": "eslint ./src || exit 0",
+    "lint:fix": "eslint ./src --fix || exit 0"
+  },
+  "author": "Alexandru C.A",
+  "license": "ISC",
+  "devDependencies": {
+    "@lnu/eslint-config": "^1.1.10"
+  },
+  "dependencies": {
+    "@lnu/json-js-cycle": "^2.0.5",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-http-context": "^2.0.0",
+    "helmet": "^8.1.0",
+    "mongoose": "^8.13.2",
+    "morgan": "^1.10.0",
+    "winston": "^3.17.0"
+  }
+}

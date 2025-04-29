@@ -1,42 +1,51 @@
 import { PasswordEntry } from '../../models/PasswordEntry.js'
-import crypto from 'crypto'
+import { logger } from '../../config/winston.js'
 
-// Din krypteringsnyckel – I verklig drift bör detta läsas från miljövariabel!
-const ENCRYPTION_KEY = crypto.randomBytes(32) // 256-bit key
-const IV_LENGTH = 16
-
-function encrypt(text) {
-  const iv = crypto.randomBytes(IV_LENGTH)
-  const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv)
-  let encrypted = cipher.update(text)
-
-  encrypted = Buffer.concat([encrypted, cipher.final()])
-  return iv.toString('hex') + ':' + encrypted.toString('hex')
-}
-
+/**
+ * Saves a password entry for the authenticated user.
+ *
+ * @param {object} req - The request object, containing user information and password details.
+ * @param {object} res - The response object, used to send the result.
+ */
 export const savePassword = async (req, res) => {
   try {
-    console.log('[DEBUG] req.user i password-service:', req.user)
     const { service, username, password } = req.body
 
-    if (!service || !username || !password) {
-      return res.status(400).json({ message: 'Alla fält krävs.' })
-    }
-
-    const encryptedPassword = encrypt(password)
-
     const entry = new PasswordEntry({
-      userId: req.user.uid, // Kommer från JWT
+      userId: req.user.uid,
       service,
       username,
-      password: encryptedPassword
+      password // krypteras automatiskt!
     })
 
     await entry.save()
-
     res.status(201).json({ message: 'Lösenord sparat!' })
-  } catch (error) {
-    console.error('[SAVE PASSWORD ERROR]', error)
-    res.status(500).json({ message: 'Serverfel vid sparande av lösenord' })
+  } catch (err) {
+    logger.error('[SAVE PASSWORD ERROR]', err)
+    res.status(500).json({ error: 'Kunde inte spara lösenord.' })
+  }
+}
+
+/**
+ * Retrieves all password entries for the authenticated user.
+ *
+ * @param {object} req - The request object, containing user information.
+ * @param {object} res - The response object, used to send the result.
+ */
+export const getUserPasswords = async (req, res) => {
+  try {
+    const entries = await PasswordEntry.find({ userId: req.user.uid })
+
+    // password-fältet
+    const result = entries.map(entry => ({
+      service: entry.service,
+      username: entry.username,
+      password: entry.password
+    }))
+
+    res.status(200).json(result)
+  } catch (err) {
+    logger.error('[GET PASSWORDS ERROR]', err)
+    res.status(500).json({ error: 'Kunde inte hämta lösenord.' })
   }
 }

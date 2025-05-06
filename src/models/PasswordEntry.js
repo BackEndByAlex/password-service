@@ -7,7 +7,7 @@ import encrypt from 'mongoose-encryption'
  * 
  * @returns {mongoose.Model} PasswordEntry
  */
-export function createPasswordModel() {
+function createPasswordModel() {
   const encKey = process.env.MONGO_ENCRYPTION_KEY
   const sigKey = process.env.MONGO_SIGNING_KEY
 
@@ -30,3 +30,5 @@ export function createPasswordModel() {
 
   return mongoose.model('PasswordEntry', passwordSchema)
 }
+
+export const PasswordEntry = createPasswordModel()

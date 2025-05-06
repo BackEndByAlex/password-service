@@ -8,9 +8,6 @@ WORKDIR /app
 # Steg 1: ta med certifikatet i sitt eget lager
 COPY public.pem ./
 
-# Steg 1: ta med certifikatet i sitt eget lager
-COPY private.pem ./
-
 # Ta med miljöfilen i sitt eget lager
 COPY .env ./
 

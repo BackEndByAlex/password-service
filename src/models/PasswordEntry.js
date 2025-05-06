@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import encrypt from 'mongoose-encryption'
 
+// create a password schema
 const passwordSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   service: { type: String, required: true },

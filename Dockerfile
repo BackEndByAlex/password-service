@@ -22,7 +22,7 @@ COPY . .
 ENV NODE_ENV=production
 
 # 5) Exponera port
-EXPOSE 3001
+EXPOSE 4001
 
 # 6) Starta appen
 CMD ["npm", "start"]

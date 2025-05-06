@@ -23,8 +23,8 @@ function createPasswordModel() {
   })
 
   passwordSchema.plugin(encrypt, {
-    encryptionKey: Buffer.from(encKey, 'hex'),
-    signingKey: Buffer.from(sigKey, 'hex'),
+    encryptionKey: Buffer.from(encKey, 'base64'),
+    signingKey: Buffer.from(sigKey, 'base64'),
     encryptedFields: ['password']
   })
 

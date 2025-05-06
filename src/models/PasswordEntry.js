@@ -15,6 +15,10 @@ const passwordSchema = new mongoose.Schema({
 const encKey = process.env.MONGO_ENCRYPTION_KEY
 const sigKey = process.env.MONGO_SIGNING_KEY
 
+if (!encKey || !sigKey) {
+  throw new Error("❗ Missing encryption keys in environment variables.")
+}
+
 passwordSchema.plugin(encrypt, {
   encryptionKey: Buffer.from(encKey, 'hex'),
   signingKey: Buffer.from(sigKey, 'hex'),

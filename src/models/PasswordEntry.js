@@ -1,5 +1,9 @@
 import mongoose from 'mongoose'
+import dotenv from 'dotenv'
 import encrypt from 'mongoose-encryption'
+
+
+dotenv.config()
 
 const passwordSchema = new mongoose.Schema({
   userId: { type: String, required: true },
@@ -11,6 +15,10 @@ const passwordSchema = new mongoose.Schema({
 // Secret keys från .env
 const encKey = process.env.MONGO_ENCRYPTION_KEY
 const sigKey = process.env.MONGO_SIGNING_KEY
+
+if (!encKey || !sigKey) {
+  throw new Error("❗ Missing encryption keys in environment variables.")
+}
 
 passwordSchema.plugin(encrypt, {
   encryptionKey: Buffer.from(encKey, 'hex'),

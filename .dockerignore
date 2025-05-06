@@ -1,0 +1,18 @@
+# Node‐moduler och paketdata
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Git‐metadata
+.git
+.gitignore
+
+# CI/CD‐konfiguration och tester
+.gitlab-ci.yml
+tests/
+vitest.setup.js
+vitest.config.js
+
+# Lokala utvecklingsfiler
+.env.local
+.vscode/

@@ -1,29 +1,32 @@
 import mongoose from 'mongoose'
-import dotenv from 'dotenv'
 import encrypt from 'mongoose-encryption'
 
+/**
+ * Skapar och returnerar PasswordEntry-modellen.
+ * Säkerställer att env-variabler är laddade innan plugin används.
+ * 
+ * @returns {mongoose.Model} PasswordEntry
+ */
+export function createPasswordModel() {
+  const encKey = process.env.MONGO_ENCRYPTION_KEY
+  const sigKey = process.env.MONGO_SIGNING_KEY
 
-dotenv.config()
+  if (!encKey || !sigKey) {
+    throw new Error("Encryption keys are missing in environment variables.")
+  }
 
-const passwordSchema = new mongoose.Schema({
-  userId: { type: String, required: true },
-  service: { type: String, required: true },
-  username: { type: String, required: true },
-  password: { type: String, required: true }
-})
+  const passwordSchema = new mongoose.Schema({
+    userId: { type: String, required: true },
+    service: { type: String, required: true },
+    username: { type: String, required: true },
+    password: { type: String, required: true }
+  })
 
-// Secret keys från .env
-const encKey = process.env.MONGO_ENCRYPTION_KEY
-const sigKey = process.env.MONGO_SIGNING_KEY
+  passwordSchema.plugin(encrypt, {
+    encryptionKey: Buffer.from(encKey, 'hex'),
+    signingKey: Buffer.from(sigKey, 'hex'),
+    encryptedFields: ['password']
+  })
 
-if (!encKey || !sigKey) {
-  throw new Error("❗ Missing encryption keys in environment variables.")
+  return mongoose.model('PasswordEntry', passwordSchema)
 }
-
-passwordSchema.plugin(encrypt, {
-  encryptionKey: Buffer.from(encKey, 'hex'),
-  signingKey: Buffer.from(sigKey, 'hex'),
-  encryptedFields: ['password']
-})
-
-export const PasswordEntry = mongoose.model('PasswordEntry', passwordSchema)

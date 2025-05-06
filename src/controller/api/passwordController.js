@@ -1,5 +1,6 @@
-import { PasswordEntry } from '../../models/PasswordEntry.js'
 import { logger } from '../../config/winston.js'
+import { PasswordEntry } from '../../models/PasswordEntry.js'
+
 
 /**
  * Saves a password entry for the authenticated user.

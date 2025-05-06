@@ -1,27 +1,31 @@
-# Använd officiell Node.js-bild
+# ─────────────────────────────────────────────────────────────
+# Produktion: Node‐app med konfigurations-filer från config/
+# ─────────────────────────────────────────────────────────────
+
 FROM node:23-slim
+WORKDIR /app
 
 # Steg 1: ta med certifikatet i sitt eget lager
 COPY public.pem ./
 
+# Steg 1: ta med certifikatet i sitt eget lager
+COPY private.pem ./
+
 # Ta med miljöfilen i sitt eget lager
 COPY .env ./
 
-# Sätt arbetskatalogen i containern
-WORKDIR /app
-
-# Kopiera package-filer och installera beroenden
+# 2) Installera beroenden (endast production för snabbhet)
 COPY package*.json ./
 RUN npm install
 
-# Kopiera resten av applikationen
+# 3) Kopiera resten av applikationen
 COPY . .
 
-# Sätt miljövariabler direkt i Docker (om du inte kör env_file)
+# 4) Sätt NODE_ENV
 ENV NODE_ENV=production
 
-# Exponera porten
+# 5) Exponera port
 EXPOSE 3001
 
-# Starta applikationen
+# 6) Starta appen
 CMD ["npm", "start"]

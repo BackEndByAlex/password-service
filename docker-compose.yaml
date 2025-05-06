@@ -1,0 +1,31 @@
+services:
+  password:
+    image: registry.gitlab.com/organisation/password-service:${CI_COMMIT_REF_SLUG}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4001:4001"
+    depends_on:
+      - passworddb
+    environment:
+      - NODE_ENV=production
+      - DB_URI=mongodb://passworddb:27017/passworddb
+    networks:
+      - timelock-network
+
+  passworddb:
+    image: mongo
+    ports:
+      - "27019:27017"
+    volumes:
+      - ./volumes/passworddb:/data/db
+    networks:
+      - timelock-network
+
+networks:
+  timelock-network:
+    external: true
+
+volumes:
+  passworddb-data:

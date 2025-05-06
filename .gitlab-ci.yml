@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────
-# SSH-setup-anchor (används bara i deploy-steget) DOne?
+# SSH-setup-anchor (används bara i deploy-steget)
 # ─────────────────────────────────────────────────────────────
 .before_script_ssh_setup: &before_script_ssh_setup
   # Se till att ssh-agent finns

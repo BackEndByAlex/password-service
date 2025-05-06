@@ -17,7 +17,7 @@ services:
   passworddb:
     image: mongo
     ports:
-      - "27019:27017"
+      - "27017:27017"
     volumes:
       - ./volumes/passworddb:/data/db
     networks:

@@ -13,8 +13,8 @@ export const savePassword = async (req, res) => {
 
     const entry = new PasswordEntry({
       userId: req.user.uid,
-      service,
-      username,
+      service, // tjänst
+      username, // användarnamn
       password // krypteras automatiskt!
     })
 

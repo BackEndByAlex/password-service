@@ -10,24 +10,35 @@ import { PasswordEntry } from '../../models/PasswordEntry.js'
  */
 export const savePassword = async (req, res) => {
   try {
-    const { service, username, password } = req.body
+    const { service, username, password } = req.body;
+    
+    // Always use uid if available, fallback to email
+    const userId = req.user.uid || req.user.email;
+    
+    console.log('[SAVING PASSWORD] Creating password entry for user:', {
+      userId,
+      provider: req.user.provider,
+      service
+    });
 
     const entry = new PasswordEntry({
-      userId: req.user.uid,
-      service, // tjänst
-      username, // användarnamn
-      password // krypteras automatiskt!
-    })
-    await entry.save()
-    console.log('[AFTER SAVE]', {
-      raw: req.body.password,
-      stored: entry.password
-    })
+      userId,
+      service,
+      username,
+      password
+    });
 
-    res.status(201).json({ message: 'Lösenord sparat!' })
+    await entry.save();
+    console.log('[PASSWORD SAVED] Successfully saved password entry');
+
+    return res.status(201).json({ message: 'Lösenord sparat!' });
   } catch (err) {
-    logger.error('[SAVE PASSWORD ERROR]', err)
-    res.status(500).json({ error: 'Kunde inte spara lösenord.' })
+    console.error('[SAVE PASSWORD ERROR]', {
+      message: err.message,
+      name: err.name,
+      stack: err.stack
+    });
+    return res.status(500).json({ error: 'Kunde inte spara lösenord.' });
   }
 }
 
@@ -45,43 +56,55 @@ export const savePassword = async (req, res) => {
  */
 export const getUserPasswords = async (req, res) => {
   try {
-    console.log('req.user in getUserPasswords:', req.user)
+    console.log('[PASSWORD RETRIEVAL] Attempting to get passwords for user:', {
+      uid: req.user.uid,
+      email: req.user.email,
+      provider: req.user.provider
+    });
     
-    // Check what identifier is available and create a query that can match on either uid or email
-    const query = {};
+    // Check which ID is stored in the database with a test query
     if (req.user.uid) {
-      // Add uid condition (this will match entries created with uid)
-      query.$or = [{ userId: req.user.uid }];
+      const testWithUid = await PasswordEntry.findOne({ userId: req.user.uid });
+      console.log('[DB TEST] Found with UID?', !!testWithUid);
       
-      // If email is also available, add it as an alternative match condition
-      if (req.user.email) {
-        query.$or.push({ userId: req.user.email });
+      if (testWithUid) {
+        // We found it with UID, continue with that
+        const entries = await PasswordEntry.find({ userId: req.user.uid });
+        const result = entries.map(entry => ({
+          service: entry.service,
+          username: entry.username,
+          password: entry.password
+        }));
+        return res.status(200).json(result);
       }
-    } else if (req.user.email) {
-      // If only email is available
-      query.userId = req.user.email;
-    } else {
-      // No valid identifier found
-      throw new Error('No valid user identifier found');
     }
     
-    console.log('Using query:', query);
-    const entries = await PasswordEntry.find(query);
-
-    // password-fältet
-    const result = entries.map(entry => ({
-      service: entry.service,
-      username: entry.username,
-      password: entry.password
-    }));
-
-    res.status(200).json(result);
+    // Try with email if UID didn't work
+    if (req.user.email) {
+      const testWithEmail = await PasswordEntry.findOne({ userId: req.user.email });
+      console.log('[DB TEST] Found with email?', !!testWithEmail);
+      
+      if (testWithEmail) {
+        const entries = await PasswordEntry.find({ userId: req.user.email });
+        const result = entries.map(entry => ({
+          service: entry.service,
+          username: entry.username,
+          password: entry.password
+        }));
+        return res.status(200).json(result);
+      }
+    }
+    
+    // If we got here, we tried both options and found nothing
+    console.log('[DB RESULT] No passwords found for this user');
+    return res.status(200).json([]); // Return empty array instead of error
+    
   } catch (err) {
-    logger.error('[GET PASSWORDS ERROR]', {
+    console.error('[GET PASSWORDS ERROR]', {
       message: err.message,
       name: err.name,
       stack: err.stack
     });
-    res.status(500).json({ error: 'Kunde inte hämta lösenord.' });
+    return res.status(500).json({ error: 'Kunde inte hämta lösenord.' });
   }
 }

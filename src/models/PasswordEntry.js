@@ -1,16 +1,15 @@
 import mongoose from 'mongoose'
 import CryptoJS from 'crypto-js'
 
-// Kontrollera att krypteringsnyckel finns
+// Kontrollera att nyckel finns
 if (!process.env.ENCRYPTION_KEY) {
-  console.error('❌ Missing encryption key — exiting.')
+  console.error('❌ Missing ENCRYPTION_KEY in environment')
   process.exit(1)
 }
 
-// Hämta krypteringsnyckel från miljövariabel
 const SECRET_KEY = process.env.ENCRYPTION_KEY
 
-// Skapa lösenordsschema
+// Skapa schema
 const passwordSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   service: { type: String, required: true },
@@ -18,28 +17,42 @@ const passwordSchema = new mongoose.Schema({
   password: { type: String, required: true }
 })
 
-// Middleware för att kryptera lösenordet innan det sparas
-passwordSchema.pre('save', function(next) {
+// Pre-save middleware: kryptera lösenord
+passwordSchema.pre('save', function (next) {
   if (this.isModified('password') || this.isNew) {
-    // Kryptera lösenordet
-    this.password = CryptoJS.AES.encrypt(this.password, SECRET_KEY).toString()
+    try {
+      this.password = CryptoJS.AES.encrypt(this.password, SECRET_KEY).toString()
+    } catch (err) {
+      console.error('[ENCRYPTION ERROR]', err)
+      return next(err)
+    }
   }
   next()
 })
 
-// Metod för att dekryptera lösenordet
-passwordSchema.methods.getDecryptedPassword = function() {
+// Instansmetod: dekryptera lösenord säkert
+passwordSchema.methods.getDecryptedPassword = function () {
   try {
+    if (!this.password || typeof this.password !== 'string') {
+      throw new Error('Ogiltigt eller tomt lösenord')
+    }
+
     const bytes = CryptoJS.AES.decrypt(this.password, SECRET_KEY)
-    return bytes.toString(CryptoJS.enc.Utf8)
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8)
+
+    if (!decrypted) {
+      throw new Error('Kunde inte dekryptera (troligen fel nyckel eller korrupt data)')
+    }
+
+    return decrypted
   } catch (error) {
-    console.error('[DECRYPTION ERROR]', error)
-    throw new Error('Failed to decrypt password')
+    console.error('[DECRYPTION ERROR]', error.message)
+    return '❌ Misslyckad dekryptering'
   }
 }
 
-// Statisk metod för att returnera alla lösenord i dekrypterad form
-passwordSchema.statics.getDecryptedPasswords = function(entries) {
+// Statisk metod: dekryptera alla entries i lista
+passwordSchema.statics.getDecryptedPasswords = function (entries) {
   return entries.map(entry => ({
     service: entry.service,
     username: entry.username,
@@ -47,4 +60,5 @@ passwordSchema.statics.getDecryptedPasswords = function(entries) {
   }))
 }
 
-export const PasswordEntry = mongoose.model('PasswordEntry', passwordSchema)
+// Exportera modellen
+export const PasswordEntry = mongoose.models.PasswordEntry || mongoose.model('PasswordEntry', passwordSchema)

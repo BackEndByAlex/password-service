@@ -47,7 +47,11 @@ export const getUserPasswords = async (req, res) => {
 
     res.status(200).json(result)
   } catch (err) {
-    logger.error('[GET PASSWORDS ERROR]', err)
+    logger.error('[GET PASSWORDS ERROR]', {
+      message: err.message,
+      name: err.name,
+      stack: err.stack
+    })
     res.status(500).json({ error: 'Kunde inte hämta lösenord.' })
   }
 }

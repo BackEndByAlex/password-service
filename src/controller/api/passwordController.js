@@ -18,12 +18,6 @@ export const savePassword = async (req, res) => {
       username, // användarnamn
       password // krypteras automatiskt!
     })
-
-    console.log('[AFTER SAVE]', {
-      raw: req.body.password,
-      stored: entry.password
-    })
-
     await entry.save()
     console.log('[AFTER SAVE]', {
       raw: req.body.password,
@@ -43,25 +37,51 @@ export const savePassword = async (req, res) => {
  * @param {object} req - The request object, containing user information.
  * @param {object} res - The response object, used to send the result.
  */
+/**
+ * Retrieves all password entries for the authenticated user.
+ *
+ * @param {object} req - The request object, containing user information.
+ * @param {object} res - The response object, used to send the result.
+ */
 export const getUserPasswords = async (req, res) => {
   try {
     console.log('req.user in getUserPasswords:', req.user)
-    const entries = await PasswordEntry.find({ userId: req.user.uid || req.user.email })
+    
+    // Check what identifier is available and create a query that can match on either uid or email
+    const query = {};
+    if (req.user.uid) {
+      // Add uid condition (this will match entries created with uid)
+      query.$or = [{ userId: req.user.uid }];
+      
+      // If email is also available, add it as an alternative match condition
+      if (req.user.email) {
+        query.$or.push({ userId: req.user.email });
+      }
+    } else if (req.user.email) {
+      // If only email is available
+      query.userId = req.user.email;
+    } else {
+      // No valid identifier found
+      throw new Error('No valid user identifier found');
+    }
+    
+    console.log('Using query:', query);
+    const entries = await PasswordEntry.find(query);
 
     // password-fältet
     const result = entries.map(entry => ({
       service: entry.service,
       username: entry.username,
       password: entry.password
-    }))
+    }));
 
-    res.status(200).json(result)
+    res.status(200).json(result);
   } catch (err) {
     logger.error('[GET PASSWORDS ERROR]', {
       message: err.message,
       name: err.name,
       stack: err.stack
-    })
-    res.status(500).json({ error: 'Kunde inte hämta lösenord.' })
+    });
+    res.status(500).json({ error: 'Kunde inte hämta lösenord.' });
   }
 }

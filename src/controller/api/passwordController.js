@@ -29,7 +29,7 @@ export const savePassword = async (req, res) => {
       raw: req.body.password,
       stored: entry.password
     })
-    
+
     res.status(201).json({ message: 'Lösenord sparat!' })
   } catch (err) {
     logger.error('[SAVE PASSWORD ERROR]', err)
@@ -57,11 +57,6 @@ export const getUserPasswords = async (req, res) => {
 
     res.status(200).json(result)
   } catch (err) {
-    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-      logger.error('[GET PASSWORDS ERROR] Invalid or expired token', err)
-      return res.status(401).json({ error: 'Authentication failed' })
-    }
-    
     logger.error('[GET PASSWORDS ERROR]', {
       message: err.message,
       name: err.name,

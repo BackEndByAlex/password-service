@@ -1,12 +1,6 @@
 import mongoose from 'mongoose'
 import CryptoJS from 'crypto-js'
 
-// Kontrollera att nyckel finns
-if (!process.env.ENCRYPTION_KEY) {
-  console.error('❌ Missing ENCRYPTION_KEY in environment')
-  process.exit(1)
-}
-
 const SECRET_KEY = process.env.ENCRYPTION_KEY
 
 // Skapa schema

@@ -13,12 +13,6 @@ export const savePassword = async (req, res) => {
     
     // Always use uid if available, fallback to email
     const userId = req.user.uid || req.user.email;
-    
-    logger.log('[SAVING PASSWORD] Creating password entry for user:', {
-      userId,
-      provider: req.user.provider,
-      service
-    });
 
     const entry = new PasswordEntry({
       userId,
@@ -28,7 +22,6 @@ export const savePassword = async (req, res) => {
     });
 
     await entry.save();
-    logger.log('[PASSWORD SAVED] Successfully saved password entry');
 
     return res.status(201).json({ message: 'Lösenord sparat!' });
   } catch (err) {
@@ -49,18 +42,11 @@ export const savePassword = async (req, res) => {
  */
 export const getUserPasswords = async (req, res) => {
   try {
-    logger.log('[PASSWORD RETRIEVAL] Attempting to get passwords for user:', {
-      uid: req.user.uid,
-      email: req.user.email,
-      provider: req.user.provider
-    });
-    
     // Check which ID is stored in the database with a test query
     let entries = [];
     
     if (req.user.uid) {
       entries = await PasswordEntry.find({ userId: req.user.uid });
-      logger.log('[DB TEST] Found with UID?', entries.length > 0);
       
       if (entries.length > 0) {
         // We found entries with UID, use them
@@ -72,7 +58,6 @@ export const getUserPasswords = async (req, res) => {
     // Try with email if UID didn't work
     if (req.user.email) {
       entries = await PasswordEntry.find({ userId: req.user.email });
-      logger.log('[DB TEST] Found with email?', entries.length > 0);
       
       if (entries.length > 0) {
         const result = PasswordEntry.getDecryptedPasswords(entries);
@@ -81,7 +66,6 @@ export const getUserPasswords = async (req, res) => {
     }
     
     // If we got here, we tried both options and found nothing
-    logger.log('[DB RESULT] No passwords found for this user');
     return res.status(200).json([]); // Return empty array instead of error
     
   } catch (err) {

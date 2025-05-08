@@ -36,14 +36,38 @@ export const savePassword = async (req, res) => {
 export const getUserPasswords = async (req, res) => {
   try {
     console.log('req.user in getUserPasswords:', req.user)
-    const entries = await PasswordEntry.find({ userId: req.user.uid || req.user.email })
 
-    // password-fältet
-    const result = entries.map(entry => ({
-      service: entry.service,
-      username: entry.username,
-      password: entry.password
-    }))
+    const userId = req.user?.uid || req.user?.email
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Ingen användaridentitet tillgänglig.' })
+    }
+
+    const entries = await PasswordEntry.find({ userId })
+
+    const result = []
+
+    for (const entry of entries) {
+      try {
+        // Testa dekryptering av lösenordet
+        result.push({
+          service: entry.service,
+          username: entry.username,
+          password: entry.password
+        })
+      } catch (decryptionError) {
+        console.error('[DECRYPT ERROR]', {
+          id: entry._id,
+          service: entry.service,
+          message: decryptionError.message
+        })
+        result.push({
+          service: entry.service,
+          username: entry.username,
+          password: '❌ Kunde inte dekryptera'
+        })
+      }
+    }
 
     res.status(200).json(result)
   } catch (err) {
@@ -55,3 +79,4 @@ export const getUserPasswords = async (req, res) => {
     res.status(500).json({ error: 'Kunde inte hämta lösenord.' })
   }
 }
+

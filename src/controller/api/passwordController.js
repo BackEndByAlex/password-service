@@ -1,7 +1,6 @@
 import { logger } from '../../config/winston.js'
 import { PasswordEntry } from '../../models/PasswordEntry.js'
 
-
 /**
  * Saves a password entry for the authenticated user.
  *
@@ -15,7 +14,7 @@ export const savePassword = async (req, res) => {
     // Always use uid if available, fallback to email
     const userId = req.user.uid || req.user.email;
     
-    console.log('[SAVING PASSWORD] Creating password entry for user:', {
+    logger.log('[SAVING PASSWORD] Creating password entry for user:', {
       userId,
       provider: req.user.provider,
       service
@@ -25,15 +24,15 @@ export const savePassword = async (req, res) => {
       userId,
       service,
       username,
-      password
+      password // Kommer att krypteras automatiskt via pre-save hook
     });
 
     await entry.save();
-    console.log('[PASSWORD SAVED] Successfully saved password entry');
+    logger.log('[PASSWORD SAVED] Successfully saved password entry');
 
     return res.status(201).json({ message: 'Lösenord sparat!' });
   } catch (err) {
-    console.error('[SAVE PASSWORD ERROR]', {
+    logger.error('[SAVE PASSWORD ERROR]', {
       message: err.message,
       name: err.name,
       stack: err.stack
@@ -48,59 +47,45 @@ export const savePassword = async (req, res) => {
  * @param {object} req - The request object, containing user information.
  * @param {object} res - The response object, used to send the result.
  */
-/**
- * Retrieves all password entries for the authenticated user.
- *
- * @param {object} req - The request object, containing user information.
- * @param {object} res - The response object, used to send the result.
- */
 export const getUserPasswords = async (req, res) => {
   try {
-    console.log('[PASSWORD RETRIEVAL] Attempting to get passwords for user:', {
+    logger.log('[PASSWORD RETRIEVAL] Attempting to get passwords for user:', {
       uid: req.user.uid,
       email: req.user.email,
       provider: req.user.provider
     });
     
     // Check which ID is stored in the database with a test query
+    let entries = [];
+    
     if (req.user.uid) {
-      const testWithUid = await PasswordEntry.findOne({ userId: req.user.uid });
-      console.log('[DB TEST] Found with UID?', !!testWithUid);
+      entries = await PasswordEntry.find({ userId: req.user.uid });
+      logger.log('[DB TEST] Found with UID?', entries.length > 0);
       
-      if (testWithUid) {
-        // We found it with UID, continue with that
-        const entries = await PasswordEntry.find({ userId: req.user.uid });
-        const result = entries.map(entry => ({
-          service: entry.service,
-          username: entry.username,
-          password: entry.password
-        }));
+      if (entries.length > 0) {
+        // We found entries with UID, use them
+        const result = PasswordEntry.getDecryptedPasswords(entries);
         return res.status(200).json(result);
       }
     }
     
     // Try with email if UID didn't work
     if (req.user.email) {
-      const testWithEmail = await PasswordEntry.findOne({ userId: req.user.email });
-      console.log('[DB TEST] Found with email?', !!testWithEmail);
+      entries = await PasswordEntry.find({ userId: req.user.email });
+      logger.log('[DB TEST] Found with email?', entries.length > 0);
       
-      if (testWithEmail) {
-        const entries = await PasswordEntry.find({ userId: req.user.email });
-        const result = entries.map(entry => ({
-          service: entry.service,
-          username: entry.username,
-          password: entry.password
-        }));
+      if (entries.length > 0) {
+        const result = PasswordEntry.getDecryptedPasswords(entries);
         return res.status(200).json(result);
       }
     }
     
     // If we got here, we tried both options and found nothing
-    console.log('[DB RESULT] No passwords found for this user');
+    logger.log('[DB RESULT] No passwords found for this user');
     return res.status(200).json([]); // Return empty array instead of error
     
   } catch (err) {
-    console.error('[GET PASSWORDS ERROR]', {
+    logger.error('[GET PASSWORDS ERROR]', {
       message: err.message,
       name: err.name,
       stack: err.stack

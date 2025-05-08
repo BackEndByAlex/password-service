@@ -19,5 +19,4 @@ passwordSchema.plugin(encrypt, {
   encryptedFields: ['password']
 })
 
-export const PasswordEntry = mongoose.models.PasswordEntry || mongoose.model('PasswordEntry', schema)
-
+export const PasswordEntry = mongoose.model('PasswordEntry', passwordSchema)

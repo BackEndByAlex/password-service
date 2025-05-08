@@ -1,7 +1,5 @@
 import mongoose from 'mongoose'
-import dotenv from 'dotenv'
 import CryptoJS from 'crypto-js'
-dotenv.config()
 
 // Kontrollera att krypteringsnyckel finns
 if (!process.env.ENCRYPTION_KEY) {

@@ -35,6 +35,7 @@ export const savePassword = async (req, res) => {
  */
 export const getUserPasswords = async (req, res) => {
   try {
+    console.log('req.user in getUserPasswords:', req.user)
     const entries = await PasswordEntry.find({ userId: req.user.uid })
 
     // password-fältet

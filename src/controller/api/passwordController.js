@@ -19,7 +19,17 @@ export const savePassword = async (req, res) => {
       password // krypteras automatiskt!
     })
 
+    console.log('[AFTER SAVE]', {
+      raw: req.body.password,
+      stored: entry.password
+    })
+
     await entry.save()
+    console.log('[AFTER SAVE]', {
+      raw: req.body.password,
+      stored: entry.password
+    })
+    
     res.status(201).json({ message: 'Lösenord sparat!' })
   } catch (err) {
     logger.error('[SAVE PASSWORD ERROR]', err)

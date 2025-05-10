@@ -77,3 +77,15 @@ export const getUserPasswords = async (req, res) => {
     return res.status(500).json({ error: 'Kunde inte hämta lösenord.' });
   }
 }
+
+export async function getPasswordById(req, res, next) {
+  try {
+    const entry = await PasswordEntry.findById(req.params.id).lean()
+    if (!entry) {
+      return res.status(404).json({ message: 'Lösenordet hittades inte' })
+    }
+    return res.json(entry)
+  } catch (err) {
+    return next(err)
+  }
+}

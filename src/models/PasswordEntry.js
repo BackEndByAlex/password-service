@@ -1,5 +1,9 @@
 import mongoose from 'mongoose'
+import dotenv from 'dotenv'
 import CryptoJS from 'crypto-js'
+
+dotenv.config()
+
 
 const SECRET_KEY = process.env.ENCRYPTION_KEY
 
@@ -48,6 +52,7 @@ passwordSchema.methods.getDecryptedPassword = function () {
 // Statisk metod: dekryptera alla entries i lista
 passwordSchema.statics.getDecryptedPasswords = function (entries) {
   return entries.map(entry => ({
+    _id: entry._id,  
     service: entry.service,
     username: entry.username,
     password: entry.getDecryptedPassword()

@@ -6,10 +6,10 @@
  */
 
 import '@lnu/json-js-cycle'
+import dotenv from 'dotenv'
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
-import dotenv from 'dotenv'
 import { randomUUID } from 'node:crypto'
 import httpContext from 'express-http-context'
 

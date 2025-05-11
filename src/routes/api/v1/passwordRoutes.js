@@ -3,7 +3,8 @@ import {
   savePassword, 
   getUserPasswords, 
   getPasswordById, 
-  changePassword 
+  changePassword,
+  passwordHistory
 } from '../../../controller/api/passwordController.js'
 import { authenticate } from '../../../middlewares/authMiddleware.js'
 
@@ -19,3 +20,5 @@ router.get('/passwords/:id', authenticate, getPasswordById)
 router.put('/passwords/:id', authenticate, changePassword)
 
 // router.delete('/passwords/:id', authenticate, deletePassword)
+
+router.get('/passwords/:id/history', authenticate, passwordHistory)

@@ -140,3 +140,21 @@ export async function changePassword(req, res, next) {
     next(err)
   }
 }
+
+export async function passwordHistory(req, res, next) {
+  const { id } = req.params
+  const userId = req.user.uid
+
+  try {
+    const entry = await PasswordEntry.findOne({ _id: id, userId }).lean()
+
+    if (!entry) {
+      return res.status(404).json({ message: 'Lösenordsposten hittades inte' })
+    }
+
+    // Returnera historik
+    return res.json(entry.history)
+  } catch (err) {
+    next(err)
+  }
+}

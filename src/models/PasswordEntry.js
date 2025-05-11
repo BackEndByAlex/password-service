@@ -12,14 +12,26 @@ const passwordSchema = new mongoose.Schema({
   userId: { type: String, required: true },
   service: { type: String, required: true },
   username: { type: String, required: true },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  history: [{
+    changedAt: { type: Date, default: Date.now, required: true }
+  }]
 })
 
 // Pre-save middleware: kryptera lösenord
 passwordSchema.pre('save', function (next) {
-  if (this.isModified('password') || this.isNew) {
+  // Om lösenordet är nytt eller har ändrats
+  if (this.isModified('password')) {
+    // 2a) Lägg in en tidstämpel i history innan krypteringen
+    this.history = this.history || []
+    this.history.push({ changedAt: new Date() })
+
+    // 2b) Kryptera det nya lösenordet
     try {
-      this.password = CryptoJS.AES.encrypt(this.password, SECRET_KEY).toString()
+      this.password = CryptoJS
+        .AES
+        .encrypt(this.password, SECRET_KEY)
+        .toString()
     } catch (err) {
       console.error('[ENCRYPTION ERROR]', err)
       return next(err)
@@ -55,7 +67,8 @@ passwordSchema.statics.getDecryptedPasswords = function (entries) {
     _id: entry._id,  
     service: entry.service,
     username: entry.username,
-    password: entry.getDecryptedPassword()
+    password: entry.getDecryptedPassword(),
+    history:  entry.history.map(h => h.changedAt)
   }))
 }
 

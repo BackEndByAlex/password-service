@@ -112,6 +112,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Cleanup any leftover volumes directories
+        run: |
+          sudo rm -rf volumes/ || true
+
       - name: Create environment files
         run: |
           echo "${{ secrets.DOTENV_FILE }}" > .env
@@ -134,6 +138,18 @@ jobs:
           echo "Deploying password service to production..."
           docker-compose -f docker-compose.yaml down --remove-orphans
           docker-compose -f docker-compose.yaml up -d
+          
+      - name: Wait for database to be ready
+        run: |
+          echo "Waiting for database to be ready..."
+          timeout 60 bash -c 'until docker-compose exec -T passworddb mongosh --eval "db.adminCommand(\"ping\")" > /dev/null 2>&1; do echo "Waiting for MongoDB..."; sleep 2; done'
+          echo "Database is ready!"
+          
+      - name: Verify deployment
+        run: |
+          echo "Verifying deployment..."
+          docker-compose ps
+          docker-compose logs --tail=20 password
           
       - name: Cleanup old images
         run: |

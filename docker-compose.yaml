@@ -23,7 +23,7 @@ services:
     ports:
       - "27018:27017"
     volumes:
-      - ./volumes/passworddb:/data/db
+      - passworddb-data:/data/db
     restart: unless-stopped
     networks:
       - timelock-network
@@ -33,4 +33,4 @@ networks:
     external: true
 
 volumes:
-  passworddb-data:
+  passworddb-data:  # Definierar named volume

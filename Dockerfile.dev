@@ -1,0 +1,23 @@
+# Använd officiell Node.js-bild
+FROM node:23-slim
+
+# Sätt arbetskatalogen i containern
+WORKDIR /app
+
+# Kopiera package-filer först
+COPY package*.json ./
+
+# Sätt NODE_ENV till development
+ENV NODE_ENV=development
+
+# Installera beroenden
+RUN npm install
+
+# Kopiera resten av koden
+COPY . .
+
+# Exponera port som appen kör på
+EXPOSE 4001
+
+# Starta applikationen i utvecklingsläge
+CMD ["npm", "run", "dev"]
